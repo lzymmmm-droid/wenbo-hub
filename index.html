@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文博Hub — 文化博物信息聚合</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+    background: #f1f0ec;
+    color: #1a1a1a;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ─── Header ─── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(12px);
+    background: rgba(241,240,236,.85);
+    display: grid;
+    align-items: center;
+    padding: 12px 24px;
+    grid-template-columns: auto 1fr auto;
+    gap: 16px;
+    border-bottom: 1px solid rgba(0,0,0,.04);
+  }
+  .logo { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 700; letter-spacing: 1px; color: #1a1a1a; text-decoration: none; white-space: nowrap; }
+  .logo span { color: #b8452a; }
+
+  .nav-tabs {
+    display: flex; gap: 4px; background: rgba(0,0,0,.04); padding: 4px; border-radius: 14px;
+    justify-self: center; flex-wrap: wrap;
+  }
+  .nav-tab {
+    padding: 6px 16px; border-radius: 10px; font-size: 13px; font-weight: 500;
+    color: #666; cursor: pointer; transition: all .15s; border: none; background: transparent; white-space: nowrap;
+  }
+  .nav-tab:hover { color: #333; background: rgba(0,0,0,.04); }
+  .nav-tab.active { color: #1a1a1a; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.08); font-weight: 600; }
+
+  .header-actions { display: flex; gap: 6px; align-items: center; }
+  .header-actions button {
+    width: 32px; height: 32px; border-radius: 8px; border: none; background: transparent;
+    cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+    color: #666; transition: all .15s;
+  }
+  .header-actions button:hover { background: rgba(0,0,0,.06); color: #1a1a1a; }
+
+  /* ─── Main Grid ─── */
+  .main { height: calc(100vh - 65px); overflow-y: auto; padding: 20px 24px 40px; }
+  .main::-webkit-scrollbar { width: 6px; }
+  .main::-webkit-scrollbar-thumb { background: #d0ccc4; border-radius: 3px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
+
+  /* ─── Card ─── */
+  .card {
+    border-radius: 16px; padding: 16px; display: flex; flex-direction: column;
+    height: 480px; position: relative; overflow: hidden;
+  }
+  .card::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: 16px; opacity: .15;
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba(255,255,255,.6) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255,255,255,.3) 0%, transparent 40%),
+      radial-gradient(circle at 50% 80%, rgba(255,255,255,.2) 0%, transparent 45%);
+  }
+  .card.cat-museums { background: #e8d5c8; }
+  .card.cat-industry { background: #c8d8e8; }
+  .card.cat-policy { background: #c8e0d0; }
+  .card.cat-kol { background: #d8cce8; }
+  .card.cat-travel { background: #e8dcc0; }
+  .card.cat-expo { background: #c0d8d8; }
+  .card.cat-provinces { background: #d0d8c0; }
+
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; position: relative; z-index: 1; }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; background: rgba(255,255,255,.7); backdrop-filter: blur(4px); flex-shrink: 0;
+  }
+  .card-info { flex: 1; min-width: 0; }
+  .card-name { font-size: 15px; font-weight: 700; color: #1a1a1a; line-height: 1.2; }
+  .card-meta { font-size: 11px; color: rgba(0,0,0,.5); }
+  .card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .card-actions button {
+    width: 28px; height: 28px; border-radius: 6px; border: none;
+    background: rgba(255,255,255,.4); cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    color: rgba(0,0,0,.45); transition: all .15s; backdrop-filter: blur(4px);
+  }
+  .card-actions button:hover { background: rgba(255,255,255,.7); color: rgba(0,0,0,.7); }
+  .card-actions .btn-star.starred { color: #e8b84a; }
+  .card-actions .drag-handle {
+    font-size: 14px; letter-spacing: -2px; cursor: grab;
+    width: 20px; height: 28px; border-radius: 6px; border: none;
+    background: transparent; display: flex; align-items: center; justify-content: center;
+    color: rgba(0,0,0,.3); transition: all .15s;
+  }
+  .card-actions .drag-handle:hover { color: rgba(0,0,0,.6); }
+  .card.dragging { opacity: .4; }
+  .card.drag-over { box-shadow: 0 0 0 2px #b8452a; }
+  .card.starred { outline: 2px solid #e8b84a; outline-offset: -2px; }
+
+  /* ─── Card Body ─── */
+  .card-body {
+    flex: 1; overflow-y: auto; padding: 8px; border-radius: 12px;
+    background: rgba(255,255,255,.55); backdrop-filter: blur(8px); position: relative; z-index: 1;
+  }
+  .card-body::-webkit-scrollbar { width: 4px; }
+  .card-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,.1); border-radius: 2px; }
+
+  .card-link-item {
+    display: flex; gap: 8px; align-items: flex-start; padding: 6px 8px; border-radius: 8px;
+    text-decoration: none; color: #1a1a1a; transition: background .15s; cursor: pointer;
+  }
+  .card-link-item:hover { background: rgba(0,0,0,.04); }
+  .card-link-item .num {
+    min-width: 22px; height: 22px; display: flex; align-items: center; justify-content: center;
+    border-radius: 6px; background: rgba(0,0,0,.06); font-size: 11px; font-weight: 600;
+    color: rgba(0,0,0,.4); flex-shrink: 0; margin-top: 1px;
+  }
+  .card-link-item .text { font-size: 13px; line-height: 1.5; flex: 1; min-width: 0; word-break: break-word; }
+  .card-link-item .item-date { font-size: 11px; color: #999; white-space: nowrap; margin-left: auto; padding-top: 2px; }
+  .card-link-item .item-tag { font-size: 10px; color: #888; background: rgba(0,0,0,.04); padding: 0 6px; border-radius: 4px; white-space: nowrap; margin-left: 4px; align-self: center; }
+
+  /* ─── Shimmer (refresh animation) ─── */
+  @keyframes shimmer { 0% { opacity: 1; } 50% { opacity: .5; } 100% { opacity: 1; } }
+  .card-body.refreshing .card-link-item { animation: shimmer .6s ease; }
+
+  /* ─── Empty ─── */
+  .empty-state { text-align: center; padding: 60px 20px; color: #999; }
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ─── AI Chat ─── */
+  .ai-fab {
+    position: fixed; bottom: 24px; right: 24px; z-index: 100;
+    width: 52px; height: 52px; border-radius: 16px;
+    background: linear-gradient(135deg, #b8452a, #8B2500);
+    color: #fff; border: none; cursor: pointer; font-size: 22px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(184,69,42,.3);
+    transition: all .2s;
+  }
+  .ai-fab:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(184,69,42,.4); }
+  .ai-fab .trial-badge {
+    position: absolute; top: -8px; right: -8px;
+    background: #e8b84a; color: #1a1a1a; font-size: 9px; font-weight: 700;
+    padding: 1px 6px; border-radius: 8px; white-space: nowrap;
+    border: 2px solid #f1f0ec;
+  }
+
+  /* Chat Window */
+  .ai-chat {
+    position: fixed; bottom: 88px; right: 24px; z-index: 100;
+    width: 380px; height: 560px; border-radius: 16px;
+    background: #fff; box-shadow: 0 8px 40px rgba(0,0,0,.12);
+    display: none; flex-direction: column; overflow: hidden;
+    border: 1px solid rgba(0,0,0,.06);
+  }
+  .ai-chat.open { display: flex; }
+  .ai-chat-header {
+    padding: 14px 16px; background: #faf9f6; border-bottom: 1px solid #eee;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ai-chat-header .avatar {
+    width: 32px; height: 32px; border-radius: 10px;
+    background: linear-gradient(135deg, #b8452a, #8B2500);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px;
+  }
+  .ai-chat-header .info { flex: 1; }
+  .ai-chat-header .info .name { font-size: 14px; font-weight: 600; }
+  .ai-chat-header .info .status { font-size: 11px; color: #999; }
+  .ai-chat-header .trial-tag {
+    font-size: 10px; background: #fef3d6; color: #9a7a2a;
+    padding: 2px 8px; border-radius: 6px; font-weight: 600;
+  }
+  .ai-chat-header .close-btn {
+    width: 28px; height: 28px; border-radius: 6px; border: none;
+    background: transparent; cursor: pointer; font-size: 16px;
+    color: #999; display: flex; align-items: center; justify-content: center;
+  }
+  .ai-chat-header .close-btn:hover { background: rgba(0,0,0,.05); color: #333; }
+
+  .ai-chat-body {
+    flex: 1; overflow-y: auto; padding: 16px;
+    background: #faf9f6; display: flex; flex-direction: column; gap: 12px;
+  }
+  .ai-chat-body::-webkit-scrollbar { width: 4px; }
+  .ai-chat-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+  .msg { display: flex; gap: 8px; max-width: 85%; }
+  .msg.ai { align-self: flex-start; }
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg .bubble {
+    padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.6;
+  }
+  .msg.ai .bubble {
+    background: #fff; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user .bubble {
+    background: linear-gradient(135deg, #b8452a, #8B2500); color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg .avatar-mini {
+    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 14px;
+  }
+  .msg.ai .avatar-mini { background: linear-gradient(135deg, #b8452a, #8B2500); color: #fff; }
+  .msg.user .avatar-mini { background: #e8e5e0; color: #666; }
+
+  .suggestions {
+    display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 16px 0;
+  }
+  .suggestions button {
+    font-size: 11px; padding: 5px 10px; border-radius: 8px; border: 1px solid #e0ddd6;
+    background: #fff; color: #666; cursor: pointer; transition: all .15s;
+  }
+  .suggestions button:hover { border-color: #b8452a; color: #b8452a; background: #fef6f3; }
+
+  .ai-chat-input {
+    padding: 10px 12px; border-top: 1px solid #eee; display: flex; gap: 8px;
+    background: #fff;
+  }
+  .ai-chat-input input {
+    flex: 1; border: none; outline: none; font-size: 13px; padding: 8px 12px;
+    border-radius: 10px; background: #f5f4f0; color: #1a1a1a;
+  }
+  .ai-chat-input input::placeholder { color: #bbb; }
+  .ai-chat-input button {
+    width: 36px; height: 36px; border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #b8452a, #8B2500);
+    color: #fff; cursor: pointer; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ai-chat-input button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .typing-dots span {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: #bbb; margin: 0 1px; animation: dotPulse 1.4s ease infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: .2s; }
+  .typing-dots span:nth-child(3) { animation-delay: .4s; }
+  @keyframes dotPulse { 0%,80%,100% { transform: scale(.6); } 40% { transform: scale(1); } }
+
+  /* ─── Mobile ─── */
+  @media (max-width: 720px) {
+    header { grid-template-columns: 1fr; gap: 8px; padding: 10px 12px; }
+    .logo { justify-self: center; }
+    .nav-tabs { justify-self: center; overflow-x: auto; max-width: 100%; }
+    .header-actions { display: none; }
+    .main { padding: 12px; }
+    .grid { grid-template-columns: 1fr; }
+    .card { height: 420px; }
+    .ai-chat { width: calc(100vw - 24px); height: 60vh; bottom: 80px; right: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="#">文博<span>Hub</span></a>
+  <div class="nav-tabs" id="nav-tabs"></div>
+  <div class="header-actions">
+    <button onclick="window.scrollTo({top:0,behavior:'smooth'})" title="回到顶部">⬆</button>
+    <button onclick="location.reload()" title="刷新">⟳</button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="grid" id="grid"></div>
+</main>
+
+<!-- AI Chat -->
+<button class="ai-fab" id="aiFab" onclick="toggleChat()">
+  🤖
+  <span class="trial-badge">免费试用</span>
+</button>
+
+<div class="ai-chat" id="aiChat">
+  <div class="ai-chat-header">
+    <div class="avatar">🤖</div>
+    <div class="info">
+      <div class="name">文博AI助手</div>
+      <div class="status">在线 · 剩余 7 天试用</div>
+    </div>
+    <span class="trial-tag">PRO</span>
+    <button class="close-btn" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="ai-chat-body" id="chatBody">
+    <div class="msg ai">
+      <div class="avatar-mini">🤖</div>
+      <div class="bubble">你好！我是文博AI助手，可以帮你了解博物馆资讯、展览信息、文物知识、文旅趋势等。有什么想问的？</div>
+    </div>
+    <div class="suggestions">
+      <button onclick="sendSuggestion('最近有什么值得看的博物馆展览？')">最近有什么展览？</button>
+      <button onclick="sendSuggestion('故宫最近有什么新动态？')">故宫新动态</button>
+      <button onclick="sendSuggestion('2026年文博行业趋势')">行业趋势</button>
+    </div>
+  </div>
+  <div class="ai-chat-input">
+    <input id="chatInput" placeholder="输入问题..." onkeydown="if(event.key==='Enter') sendMsg()">
+    <button id="chatSend" onclick="sendMsg()">➤</button>
+  </div>
+</div>
+
+<script>
+// ─── Data ───
+const categories = [
+  { id: "all", name: "全部" },
+  { id: "starred", name: "⭐ 收藏" },
+  { id: "provinces", name: "全国各省市" },
+  { id: "museums", name: "热门博物馆" },
+  { id: "industry", name: "行业媒体" },
+  { id: "policy", name: "政策法规" },
+  { id: "kol", name: "文博KOL" },
+  { id: "travel", name: "文旅趋势" },
+  { id: "expo", name: "展览资讯" },
+];
+
+const sources = [
+  { cat: "museums", icon: "🏛️", name: "故宫博物院", url: "https://www.dpm.org.cn",
+    items: [
+      { t: "故宫博物院2026年暑期展览预告发布" },
+      { t: "数字故宫全新升级：3D文物库开放公测" },
+      { t: "故宫古建修缮工程进度报告（2026Q2）" },
+    ]},
+  { cat: "museums", icon: "🇨🇳", name: "中国国家博物馆", url: "https://www.chnmuseum.cn",
+    items: [
+      { t: "中国古代书画展：宋元珍品集中亮相" },
+      { t: "国博考古成果展：2025年度十大考古新发现" },
+    ]},
+  { cat: "museums", icon: "🏺", name: "上海博物馆", url: "https://www.shanghaimuseum.net",
+    items: [
+      { t: "上博东馆全面开放：新增六个常设展厅" },
+      { t: "《对话世界》系列大展：古埃及文明特展" },
+    ]},
+  { cat: "museums", icon: "🗿", name: "三星堆博物馆", url: "https://www.sanxingdui.com.cn",
+    items: [
+      { t: "三星堆遗址考古新发现：祭祀区新出土青铜器" },
+      { t: "三星堆数字展「古蜀幻境」上线" },
+      { t: "三星堆与金沙联合申遗最新进展" },
+    ]},
+  { cat: "museums", icon: "🐎", name: "陕西历史博物馆", url: "https://www.sxhm.com",
+    items: [
+      { t: "陕历博秦汉馆开放：聚焦大一统文明" },
+      { t: "唐代壁画珍品展：修复成果首次公开" },
+    ]},
+  { cat: "museums", icon: "🪷", name: "敦煌研究院", url: "https://www.dha.ac.cn",
+    items: [
+      { t: "敦煌数字化保护：第285窟8K全景上线" },
+      { t: "「敦煌文化环球展」2026年巡展计划" },
+    ]},
+  { cat: "museums", icon: "🏯", name: "南京博物院", url: "https://www.njmuseumadmin.com",
+    items: [
+      { t: "南博90周年院庆：镇院之宝集中展出" },
+      { t: "长江文明考古成果特展启幕" },
+    ]},
+  { cat: "museums", icon: "⚱️", name: "河南博物院", url: "https://www.chnmus.net",
+    items: [
+      { t: "贾湖骨笛研究新发现：改写中国音乐史" },
+      { t: "中原文明探源系列展览开幕" },
+    ]},
+  { cat: "industry", icon: "📰", name: "文博圈", url: "https://weibo.com/u/5993326900",
+    items: [
+      { t: "2026年国际博物馆日中国主会场活动出炉" },
+      { t: "全国博物馆年度观众数据报告发布" },
+      { t: "文物行业人才缺口调查：修复师仍紧缺" },
+    ]},
+  { cat: "industry", icon: "📡", name: "弘博网", url: "http://www.hongbowang.net",
+    items: [
+      { t: "全国博物馆数字化建设水平评估报告" },
+      { t: "文博行业政府采购趋势分析（2026Q1）" },
+    ]},
+  { cat: "industry", icon: "📰", name: "博物馆头条", url: "https://mp.weixin.qq.com",
+    items: [
+      { t: "多家博物馆取消预约制：实地调研反馈" },
+      { t: "博物馆文创破圈：年营收突破百亿" },
+    ]},
+  { cat: "industry", icon: "🏺", name: "文博头条", url: "https://mp.weixin.qq.com",
+    items: [
+      { t: "文化遗产保护利用示范案例征集" },
+      { t: "民间收藏文物鉴定管理新规解读" },
+    ]},
+  { cat: "policy", icon: "📜", name: "国家文物局", url: "http://www.ncha.gov.cn",
+    items: [
+      { t: "关于加强文物科技创新的指导意见发布" },
+      { t: "第八批国家级文物保护单位名单公示" },
+    ]},
+  { cat: "policy", icon: "🏛️", name: "文化和旅游部", url: "https://www.mct.gov.cn",
+    items: [
+      { t: "2026年文旅融合发展专项资金申报" },
+      { t: "智慧旅游创新案例征集评选结果" },
+    ]},
+  { cat: "policy", icon: "📋", name: "中国文化遗产研究院", url: "https://www.cach.org.cn",
+    items: [
+      { t: "土遗址保护技术新标准发布实施" },
+      { t: "2026年度文化遗产保护科技项目立项" },
+    ]},
+  { cat: "policy", icon: "🗺️", name: "考古研究中心", url: "http://www.kaogu.net.cn",
+    items: [
+      { t: "2025年度全国十大考古新发现揭晓" },
+      { t: "中华文明探源工程第五阶段成果" },
+    ]},
+  { cat: "kol", icon: "🎙️", name: "河森堡", url: "https://weibo.com/u/2974786652",
+    items: [
+      { t: "为什么博物馆里的青铜器大多是绿色的？" },
+      { t: "我在国博讲文物：最打动观众的10件文物" },
+    ]},
+  { cat: "kol", icon: "🏺", name: "遗产卫报", url: "#",
+    items: [
+      { t: "古城保护的困局：商业化与原生性的平衡" },
+      { t: "非遗传承人老龄化：谁来接棒？" },
+    ]},
+  { cat: "kol", icon: "📖", name: "斜阳君", url: "https://weibo.com",
+    items: [
+      { t: "逛博物馆的正确姿势：如何看懂一幅古画" },
+      { t: "文物背后的中国色彩美学" },
+    ]},
+  { cat: "kol", icon: "🔍", name: "考古君", url: "https://weibo.com",
+    items: [
+      { t: "田野考古日记：一个墓葬的发掘全过程" },
+      { t: "科技考古：DNA技术如何改写历史认知" },
+    ]},
+  { cat: "kol", icon: "🎥", name: "古墓派", url: "https://www.bilibili.com",
+    items: [
+      { t: "海昏侯墓发掘纪实：2000年前的奢华" },
+      { t: "考古现场Vlog：一天到底在挖什么" },
+    ]},
+  { cat: "travel", icon: "🗺️", name: "马蜂窝", url: "https://www.mafengwo.cn",
+    items: [
+      { t: "2026年「博物馆旅游」热度同比增长85%" },
+      { t: "五一文旅消费报告：文博场馆预订量创新高" },
+    ]},
+  { cat: "travel", icon: "📊", name: "中国旅游研究院", url: "http://www.ctaweb.org",
+    items: [
+      { t: "2026年一季度文化和旅游市场运行报告" },
+      { t: "红色旅游与文化遗产融合发展研究" },
+    ]},
+  { cat: "travel", icon: "📱", name: "小红书文旅", url: "https://www.xiaohongshu.com",
+    items: [
+      { t: "「小众博物馆」搜索量暴涨 200%" },
+      { t: "Citywalk路线中文化遗产打卡点分析" },
+    ]},
+  { cat: "travel", icon: "🌏", name: "UNESCO世界遗产", url: "https://whc.unesco.org",
+    items: [
+      { t: "2026年世界遗产大会新增名录公布" },
+      { t: "中国世界文化遗产保护状况年度报告" },
+    ]},
+  { cat: "expo", icon: "🖼️", name: "热门展览推荐", url: "#",
+    items: [
+      { t: "5月全国重点博物馆展览月历" },
+      { t: "「千里江山」特展：故宫×国博联合呈现" },
+      { t: "古埃及文物大展：金字塔之巅（上博）" },
+    ]},
+  { cat: "expo", icon: "🏺", name: "考古中国", url: "http://www.kaogu.cn",
+    items: [
+      { t: "南海沉船考古：明代青花瓷批量出水" },
+      { t: "新疆喀什古城考古重要发现" },
+    ]},
+  { cat: "expo", icon: "🗿", name: "中华文物云", url: "https://www.wwj.org.cn",
+    items: [
+      { t: "全国博物馆藏品数据开放平台上线" },
+      { t: "文物数字化保护标杆项目公示" },
+    ]},
+
+  // ─── 全国各省市 ───
+  { cat: "provinces", icon: "🏯", name: "北京市文物局", url: "https://wwj.beijing.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏯", name: "天津市文旅局", url: "https://whly.tj.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🗿", name: "河北省文物局", url: "https://wenwu.hebei.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "山西省文物局", url: "https://wwj.shanxi.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🐎", name: "内蒙古自治区文旅厅", url: "https://wlt.nmg.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "辽宁省文旅厅", url: "https://whly.ln.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "吉林省文旅厅", url: "https://whhlyt.jl.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "黑龙江省文旅厅", url: "https://wlt.hlj.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏙️", name: "上海市文旅局", url: "https://whlyj.sh.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏯", name: "江苏省文旅厅", url: "http://wlt.jiangsu.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏯", name: "浙江省文物局", url: "http://wwj.zj.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "安徽省文旅厅", url: "https://ct.ah.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏯", name: "福建省文物局", url: "http://wwj.wlt.fujian.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "江西省文旅厅", url: "http://dct.jiangxi.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏯", name: "山东省文旅厅", url: "http://whhly.shandong.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "⚱️", name: "河南省文物局", url: "https://wwj.henan.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "湖北省文旅厅", url: "http://wlt.hubei.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "湖南省文物局", url: "https://wwj.hunan.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏯", name: "广东省文旅厅", url: "https://whly.gd.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏯", name: "广西自治区文旅厅", url: "http://wlt.gxzf.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏝️", name: "海南省旅文厅", url: "http://lwt.hainan.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏙️", name: "重庆市文旅委", url: "http://whlyw.cq.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "四川省文旅厅", url: "https://wlt.sc.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "贵州省文旅厅", url: "https://whhly.guizhou.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "云南省文旅厅", url: "https://dct.yn.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏔️", name: "西藏自治区文旅厅", url: "https://wlt.xizang.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "陕西省文物局", url: "https://wwj.shaanxi.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "甘肃省文物局", url: "http://wwj.gansu.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "青海省文物局", url: "http://whlyt.qinghai.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "宁夏自治区文旅厅", url: "https://whhlyt.nx.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", icon: "🏺", name: "新疆自治区文旅厅", url: "https://wlt.xinjiang.gov.cn", items: [{ t: "加载中..." }]},
+
+];
+
+// ─── Starred Sources (localStorage) ───
+const STORAGE_KEY = "wenbohub_starred";
+const ORDER_KEY = "wenbohub_order";
+let starredSources = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"));
+
+function saveStars() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...starredSources]));
+}
+
+function toggleStar(btn) {
+  const card = btn.closest(".card");
+  const name = card.dataset.name;
+  if (starredSources.has(name)) {
+    starredSources.delete(name);
+    btn.classList.remove("starred");
+    btn.textContent = "☆";
+    card.classList.remove("starred");
+  } else {
+    starredSources.add(name);
+    btn.classList.add("starred");
+    btn.textContent = "★";
+    card.classList.add("starred");
+  }
+  saveStars();
+  // If in "starred" view and unfavorited, remove the card
+  if (currentCat === "starred" && !starredSources.has(name)) {
+    card.style.transition = "opacity .3s, transform .3s";
+    card.style.opacity = "0";
+    card.style.transform = "scale(.95)";
+    setTimeout(() => render("starred"), 300);
+  }
+}
+
+function getOrder() {
+  try { return JSON.parse(localStorage.getItem(ORDER_KEY) || "[]"); } catch { return []; }
+}
+function saveOrder(names) {
+  localStorage.setItem(ORDER_KEY, JSON.stringify(names));
+}
+
+// ─── Render Grid ───
+const navTabs = document.getElementById("nav-tabs");
+const grid = document.getElementById("grid");
+let currentCat = "all";
+let dragSourceName = null;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function render(catId) {
+  currentCat = catId;
+
+  // Filter
+  let filtered;
+  if (catId === "starred") {
+    filtered = sources.filter(s => starredSources.has(s.name));
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state"><div class="icon">⭐</div><p>还没有收藏信源，点击卡片上的 ☆ 收藏</p></div>`;
+      return;
+    }
+    filtered.sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0));
+  } else if (catId === "all") {
+    // Starred first, then by saved order
+    const starred = sources.filter(s => starredSources.has(s.name));
+    const unstarred = sources.filter(s => !starredSources.has(s.name));
+    const order = getOrder();
+    const sortByOrder = arr => {
+      const ordered = [];
+      order.forEach(name => {
+        const idx = arr.findIndex(s => s.name === name);
+        if (idx !== -1) { ordered.push(arr[idx]); arr.splice(idx, 1); }
+      });
+      return [...ordered, ...arr];
+    };
+    filtered = [...sortByOrder(starred), ...sortByOrder(unstarred)];
+    // 在已有排序基础上，按条目数降序排列（信息最多的置顶）
+    filtered.sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0));
+  } else {
+    filtered = sources.filter(s => s.cat === catId);
+    // Apply saved order within category
+    const order = getOrder();
+    const catFiltered = [];
+    order.forEach(name => {
+      const idx = filtered.findIndex(s => s.name === name);
+      if (idx !== -1) { catFiltered.push(filtered[idx]); filtered.splice(idx, 1); }
+    });
+    filtered = [...catFiltered, ...filtered];
+    filtered.sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0));
+  }
+
+  let html = "";
+  filtered.forEach((s, i) => {
+    const starred = starredSources.has(s.name);
+    const starChar = starred ? "★" : "☆";
+    const starClass = starred ? " starred" : "";
+    html += `<div class="card cat-${s.cat}${starred ? " starred" : ""}" draggable="true" data-name="${s.name}">
+      <div class="card-header">
+        <div class="card-icon">${s.icon}</div>
+        <div class="card-info">
+          <div class="card-name">${s.name}</div>
+          <div class="card-meta" data-meta>刚刚更新</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-star${starClass}" onclick="toggleStar(this)" title="收藏">${starChar}</button>
+          <button onclick="refreshCard(this)" title="刷新">⟳</button>
+          <button onclick="event.stopPropagation();window.open('${s.url}','_blank')" title="打开">↗</button>
+          <span class="drag-handle" title="拖拽排序">⠿</span>
+        </div>
+      </div>
+      <div class="card-body" data-body>
+        ${(s.items || []).map((item, j) => {
+          const url = item.u || s.url || "#";
+          return `<a class="card-link-item" href="${url}" target="_blank">
+            <span class="num">${j + 1}</span>
+            <span class="text">${item.t}</span>
+            ${item.date ? `<span class="item-date">${item.date}</span>` : ""}
+            ${item.feed ? `<span class="item-tag">${item.feed}</span>` : ""}
+          </a>`;
+        }).join("")}
+      </div>
+    </div>`;
+  });
+  grid.innerHTML = html;
+  setupDragDrop();
+}
+
+// ─── Drag & Drop ───
+function setupDragDrop() {
+  const cards = grid.querySelectorAll(".card");
+  cards.forEach(card => {
+    card.addEventListener("dragstart", onDragStart);
+    card.addEventListener("dragend", onDragEnd);
+    card.addEventListener("dragover", onDragOver);
+    card.addEventListener("dragleave", onDragLeave);
+    card.addEventListener("drop", onDrop);
+  });
+}
+
+function onDragStart(e) {
+  dragSourceName = e.target.closest(".card").dataset.name;
+  e.target.closest(".card").classList.add("dragging");
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/plain", dragSourceName);
+}
+
+function onDragEnd(e) {
+  e.target.closest(".card").classList.remove("dragging");
+  document.querySelectorAll(".card.drag-over").forEach(c => c.classList.remove("drag-over"));
+  dragSourceName = null;
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  const target = e.target.closest(".card");
+  if (target && target.dataset.name !== dragSourceName) {
+    target.classList.add("drag-over");
+  }
+}
+
+function onDragLeave(e) {
+  const target = e.target.closest(".card");
+  if (target) target.classList.remove("drag-over");
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  document.querySelectorAll(".card.drag-over").forEach(c => c.classList.remove("drag-over"));
+  const targetCard = e.target.closest(".card");
+  if (!targetCard || targetCard.dataset.name === dragSourceName) return;
+
+  const names = Array.from(grid.querySelectorAll(".card")).map(c => c.dataset.name);
+  const fromIdx = names.indexOf(dragSourceName);
+  const toIdx = names.indexOf(targetCard.dataset.name);
+  if (fromIdx === -1 || toIdx === -1) return;
+
+  if (fromIdx < toIdx) {
+    targetCard.parentNode.insertBefore(targetCard.parentNode.children[fromIdx], targetCard.nextSibling);
+  } else {
+    targetCard.parentNode.insertBefore(targetCard.parentNode.children[fromIdx], targetCard);
+  }
+
+  const newOrder = Array.from(grid.querySelectorAll(".card")).map(c => c.dataset.name);
+  saveOrder(newOrder);
+}
+
+// ─── Per-card Refresh ───
+function refreshCard(btn) {
+  const card = btn.closest(".card");
+  const body = card.querySelector("[data-body]");
+  const meta = card.querySelector("[data-meta]");
+  const items = Array.from(body.querySelectorAll(".card-link-item"));
+
+  // Shuffle items
+  const shuffled = shuffle(items);
+  // Re-number
+  shuffled.forEach((item, i) => {
+    item.querySelector(".num").textContent = i + 1;
+    body.appendChild(item);
+  });
+
+  // Shimmer animation
+  body.classList.add("refreshing");
+  setTimeout(() => body.classList.remove("refreshing"), 600);
+
+  // Update time
+  const times = ["刚刚刷新", "1分钟前更新", "2分钟前更新", "刚刚刷新"];
+  meta.textContent = times[Math.floor(Math.random() * times.length)];
+}
+
+// ─── Nav ───
+categories.forEach(cat => {
+  const btn = document.createElement("button");
+  btn.className = "nav-tab" + (cat.id === "all" ? " active" : "");
+  btn.textContent = cat.name;
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".nav-tab").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    render(cat.id);
+  });
+  navTabs.appendChild(btn);
+});
+
+// ─── 加载 feed.json 并合并 ───
+async function loadFeed() {
+  try {
+    const res = await fetch("data/feed.json?" + Date.now());
+    const feed = await res.json();
+    const feedNames = new Set();
+    for (const src of feed.sources) {
+      feedNames.add(src.name);
+      // 替换或追加到 sources
+      const idx = sources.findIndex(s => s.name === src.name);
+      const entry = {
+        cat: src.cat || "policy",
+        icon: src.icon || "📄",
+        name: src.name,
+        items: (src.items || []).map(i => ({
+          t: i.t,
+          u: i.u || "",
+          date: i.date || "",
+          feed: i.feed || "",
+        })),
+      };
+      if (idx >= 0) sources[idx] = entry;
+      else sources.push(entry);
+    }
+    // 删除已不再抓取的信源（仅在 feed.json 有覆盖时）
+    // 保留未在 feed 中的硬编码信源
+  } catch (e) {
+    console.warn("feed.json 加载失败，使用内置数据", e);
+  }
+}
+
+loadFeed().then(() => render("all"));
+
+// ─── AI Chat ───
+function toggleChat() {
+  document.getElementById("aiChat").classList.toggle("open");
+}
+
+// Simulated AI responses
+const aiAnswers = {
+  "展览": "近期值得关注的展览包括：\n1️⃣ 故宫博物院「千里江山」特展（6月-9月）\n2️⃣ 上博「古埃及文明大展」（持续至8月）\n3️⃣ 国博「中国古代书画展」宋元珍品专场\n4️⃣ 三星堆新出土文物特展\n\n建议提前在线预约，周末人流量较大。",
+  "故宫": "故宫近期动态：\n• 2026年暑期将推出「数字文物沉浸展」\n• 3D文物库已开放公测，首批上线5000件珍贵文物\n• 养心殿修缮工程进入最后阶段，预计年底开放\n• 故宫文创2026上半年营收同比增长35%",
+  "趋势": "2026年文博行业主要趋势：\n1️⃣ **数字化加速**：8K全景、AR导览成为大型博物馆标配\n2️⃣ **取消预约制**：越来越多博物馆取消预约，提升参观体验\n3️⃣ **文创破圈**：文博IP联名产品市场规模预计突破200亿\n4️⃣ **博物馆旅游热**：年轻群体「为了一座馆赴一座城」成新风尚\n5️⃣ **AI+文博**：AI辅助文物修复、智能导览、藏品管理全面落地",
+};
+
+function getAIResponse(input) {
+  if (input.includes("展览") || input.includes("展") || input.includes("看")) return aiAnswers["展览"];
+  if (input.includes("故宫")) return aiAnswers["故宫"];
+  if (input.includes("趋势") || input.includes("行业") || input.includes("2026")) return aiAnswers["趋势"];
+  return `关于「${input}」，我找到以下信息：\n\n这是文博领域的一个有意思的话题。建议关注国家文物局官网发布的最新政策动态，以及各大博物馆的官方公告。你也可以在「文博Hub」的相关信源卡片中查看最新相关内容。`;
+}
+
+function sendMsg() {
+  const input = document.getElementById("chatInput");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  appendMsg("user", text);
+
+  const sendBtn = document.getElementById("chatSend");
+  sendBtn.disabled = true;
+
+  // Typing indicator
+  const dots = document.createElement("div");
+  dots.className = "msg ai";
+  dots.id = "typingDots";
+  dots.innerHTML = `<div class="avatar-mini">🤖</div><div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+  document.getElementById("chatBody").appendChild(dots);
+  document.getElementById("chatBody").scrollTop = document.getElementById("chatBody").scrollHeight;
+
+  setTimeout(() => {
+    document.getElementById("typingDots")?.remove();
+    appendMsg("ai", getAIResponse(text));
+    sendBtn.disabled = false;
+  }, 1000 + Math.random() * 800);
+}
+
+function sendSuggestion(text) {
+  document.getElementById("chatInput").value = text;
+  sendMsg();
+}
+
+function appendMsg(role, text) {
+  const body = document.getElementById("chatBody");
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.innerHTML = `<div class="avatar-mini">${role === "ai" ? "🤖" : "👤"}</div><div class="bubble">${text.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")}</div>`;
+  // Insert before suggestions if last msg
+  const suggestions = body.querySelector(".suggestions");
+  if (suggestions) body.insertBefore(div, suggestions);
+  else body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+</script>
+</body>
+</html>
