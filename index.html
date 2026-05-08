@@ -649,13 +649,21 @@ function render(catId) {
 
   let html = "";
   if (catId === "provinces") {
-    // 分组显示：中央机构 → 省 → 自治区 → 直辖市 → 特别行政区
+    // 分组显示：中央机构 → 省、自治区 → 直辖市 → 特别行政区
     const regionOrder = ["central", "province", "autonomous", "municipality", "sar"];
     const regionLabels = { central: "中央机构", province: "省", autonomous: "自治区", municipality: "直辖市", sar: "特别行政区" };
+    let lastHeader = null;
     regionOrder.forEach(region => {
       const group = filtered.filter(s => s.region === region);
       if (group.length === 0) return;
-      html += `<div class="section-header">${regionLabels[region]}</div>`;
+      // 省和自治区共用一个 header
+      let header;
+      if (region === "province" || region === "autonomous") header = "省、自治区";
+      else header = regionLabels[region];
+      if (header !== lastHeader) {
+        html += `<div class="section-header">${header}</div>`;
+        lastHeader = header;
+      }
       group.forEach(s => {
         const starred = starredSources.has(s.name);
         const starChar = starred ? "★" : "☆";
