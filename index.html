@@ -57,6 +57,19 @@
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; }
 
+  /* ─── Section Header (省市分组) ─── */
+  .section-header {
+    grid-column: 1 / -1;
+    font-size: 13px;
+    font-weight: 700;
+    color: #999;
+    letter-spacing: 2px;
+    padding: 20px 0 4px;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    margin-bottom: 0;
+  }
+  .section-header:first-child { padding-top: 0; }
+
   /* ─── Card ─── */
   .card {
     border-radius: 16px; padding: 16px; display: flex; flex-direction: column;
@@ -388,12 +401,12 @@ const sources = [
       { t: "文化遗产保护利用示范案例征集" },
       { t: "民间收藏文物鉴定管理新规解读" },
     ]},
-  { cat: "policy", icon: "📜", name: "国家文物局", url: "http://www.ncha.gov.cn",
+  { cat: "provinces", region: "central", icon: "📜", name: "国家文物局", url: "http://www.ncha.gov.cn",
     items: [
       { t: "关于加强文物科技创新的指导意见发布" },
       { t: "第八批国家级文物保护单位名单公示" },
     ]},
-  { cat: "policy", icon: "🏛️", name: "文化和旅游部", url: "https://www.mct.gov.cn",
+  { cat: "provinces", region: "central", icon: "🏛️", name: "文化和旅游部", url: "https://www.mct.gov.cn",
     items: [
       { t: "2026年文旅融合发展专项资金申报" },
       { t: "智慧旅游创新案例征集评选结果" },
@@ -470,38 +483,42 @@ const sources = [
       { t: "文物数字化保护标杆项目公示" },
     ]},
 
-  // ─── 全国各省市 ───
-  { cat: "provinces", icon: "🏯", name: "北京市文物局", url: "https://wwj.beijing.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏯", name: "天津市文旅局", url: "https://whly.tj.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🗿", name: "河北省文物局", url: "https://wenwu.hebei.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "山西省文物局", url: "https://wwj.shanxi.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🐎", name: "内蒙古自治区文旅厅", url: "https://wlt.nmg.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "辽宁省文旅厅", url: "https://whly.ln.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "吉林省文旅厅", url: "https://whhlyt.jl.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "黑龙江省文旅厅", url: "https://wlt.hlj.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏙️", name: "上海市文旅局", url: "https://whlyj.sh.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏯", name: "江苏省文旅厅", url: "http://wlt.jiangsu.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏯", name: "浙江省文物局", url: "http://wwj.zj.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "安徽省文旅厅", url: "https://ct.ah.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏯", name: "福建省文物局", url: "http://wwj.wlt.fujian.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "江西省文旅厅", url: "http://dct.jiangxi.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏯", name: "山东省文旅厅", url: "http://whhly.shandong.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "⚱️", name: "河南省文物局", url: "https://wwj.henan.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "湖北省文旅厅", url: "http://wlt.hubei.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "湖南省文物局", url: "https://wwj.hunan.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏯", name: "广东省文旅厅", url: "https://whly.gd.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏯", name: "广西自治区文旅厅", url: "http://wlt.gxzf.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏝️", name: "海南省旅文厅", url: "http://lwt.hainan.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏙️", name: "重庆市文旅委", url: "http://whlyw.cq.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "四川省文旅厅", url: "https://wlt.sc.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "贵州省文旅厅", url: "https://whhly.guizhou.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "云南省文旅厅", url: "https://dct.yn.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏔️", name: "西藏自治区文旅厅", url: "https://wlt.xizang.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "陕西省文物局", url: "https://wwj.shaanxi.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "甘肃省文物局", url: "http://wwj.gansu.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "青海省文物局", url: "http://whlyt.qinghai.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "宁夏自治区文旅厅", url: "https://whhlyt.nx.gov.cn", items: [{ t: "加载中..." }]},
-  { cat: "provinces", icon: "🏺", name: "新疆自治区文旅厅", url: "https://wlt.xinjiang.gov.cn", items: [{ t: "加载中..." }]},
+  // ─── 全国各省市（按 region 分组） ───
+  { cat: "provinces", region: "municipality", icon: "🏯", name: "北京市文物局", url: "https://wwj.beijing.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "municipality", icon: "🏯", name: "天津市文旅局", url: "https://whly.tj.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🗿", name: "河北省文物局", url: "https://wenwu.hebei.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "山西省文物局", url: "https://wwj.shanxi.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "autonomous", icon: "🐎", name: "内蒙古自治区文旅厅", url: "https://wlt.nmg.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "辽宁省文旅厅", url: "https://whly.ln.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "吉林省文旅厅", url: "https://whhlyt.jl.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "黑龙江省文旅厅", url: "https://wlt.hlj.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "municipality", icon: "🏙️", name: "上海市文旅局", url: "https://whlyj.sh.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏯", name: "江苏省文旅厅", url: "http://wlt.jiangsu.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏯", name: "浙江省文物局", url: "http://wwj.zj.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "安徽省文旅厅", url: "https://ct.ah.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏯", name: "福建省文物局", url: "http://wwj.wlt.fujian.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "江西省文旅厅", url: "http://dct.jiangxi.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏯", name: "山东省文旅厅", url: "http://whhly.shandong.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "⚱️", name: "河南省文物局", url: "https://wwj.henan.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "湖北省文旅厅", url: "http://wlt.hubei.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "湖南省文物局", url: "https://wwj.hunan.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏯", name: "广东省文旅厅", url: "https://whly.gd.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "autonomous", icon: "🏯", name: "广西自治区文旅厅", url: "http://wlt.gxzf.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏝️", name: "海南省旅文厅", url: "http://lwt.hainan.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "municipality", icon: "🏙️", name: "重庆市文旅委", url: "http://whlyw.cq.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "四川省文旅厅", url: "https://wlt.sc.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "贵州省文旅厅", url: "https://whhly.guizhou.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "云南省文旅厅", url: "https://dct.yn.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "autonomous", icon: "🏔️", name: "西藏自治区文旅厅", url: "https://wlt.xizang.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "陕西省文物局", url: "https://wwj.shaanxi.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "甘肃省文物局", url: "http://wwj.gansu.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "province", icon: "🏺", name: "青海省文物局", url: "http://whlyt.qinghai.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "autonomous", icon: "🏺", name: "宁夏自治区文旅厅", url: "https://whhlyt.nx.gov.cn", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "autonomous", icon: "🏺", name: "新疆自治区文旅厅", url: "https://wlt.xinjiang.gov.cn", items: [{ t: "加载中..." }]},
+  // 特别行政区
+  { cat: "provinces", region: "sar", icon: "🇭🇰", name: "香港古物古蹟辦", url: "https://www.amo.gov.hk", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "sar", icon: "🇲🇴", name: "澳門文化局", url: "https://www.macauculture.gov.mo", items: [{ t: "加载中..." }]},
+  { cat: "provinces", region: "sar", icon: "🏯", name: "台灣博物之島", url: "https://www.tmaroc.org.tw", items: [{ t: "加载中..." }]},
 
 ];
 
@@ -560,6 +577,35 @@ function shuffle(arr) {
   return a;
 }
 
+function cardHtml(s, starred, starChar, starClass) {
+  return `<div class="card cat-${s.cat}${starred ? " starred" : ""}" draggable="true" data-name="${s.name}">
+    <div class="card-header">
+      <div class="card-icon">${s.icon}</div>
+      <div class="card-info">
+        <div class="card-name">${s.name}</div>
+        <div class="card-meta" data-meta>刚刚更新</div>
+      </div>
+      <div class="card-actions">
+        <button class="btn-star${starClass}" onclick="toggleStar(this)" title="收藏">${starChar}</button>
+        <button onclick="refreshCard(this)" title="刷新">⟳</button>
+        <button onclick="event.stopPropagation();window.open('${s.url}','_blank')" title="打开">↗</button>
+        <span class="drag-handle" title="拖拽排序">⠿</span>
+      </div>
+    </div>
+    <div class="card-body" data-body>
+      ${(s.items || []).map((item, j) => {
+        const url = item.u || s.url || "#";
+        return `<a class="card-link-item" href="${url}" target="_blank">
+          <span class="num">${j + 1}</span>
+          <span class="text">${item.t}</span>
+          ${item.date ? `<span class="item-date">${item.date}</span>` : ""}
+          ${item.feed ? `<span class="item-tag">${item.feed}</span>` : ""}
+        </a>`;
+      }).join("")}
+    </div>
+  </div>`;
+}
+
 function render(catId) {
   currentCat = catId;
 
@@ -602,37 +648,29 @@ function render(catId) {
   }
 
   let html = "";
-  filtered.forEach((s, i) => {
-    const starred = starredSources.has(s.name);
-    const starChar = starred ? "★" : "☆";
-    const starClass = starred ? " starred" : "";
-    html += `<div class="card cat-${s.cat}${starred ? " starred" : ""}" draggable="true" data-name="${s.name}">
-      <div class="card-header">
-        <div class="card-icon">${s.icon}</div>
-        <div class="card-info">
-          <div class="card-name">${s.name}</div>
-          <div class="card-meta" data-meta>刚刚更新</div>
-        </div>
-        <div class="card-actions">
-          <button class="btn-star${starClass}" onclick="toggleStar(this)" title="收藏">${starChar}</button>
-          <button onclick="refreshCard(this)" title="刷新">⟳</button>
-          <button onclick="event.stopPropagation();window.open('${s.url}','_blank')" title="打开">↗</button>
-          <span class="drag-handle" title="拖拽排序">⠿</span>
-        </div>
-      </div>
-      <div class="card-body" data-body>
-        ${(s.items || []).map((item, j) => {
-          const url = item.u || s.url || "#";
-          return `<a class="card-link-item" href="${url}" target="_blank">
-            <span class="num">${j + 1}</span>
-            <span class="text">${item.t}</span>
-            ${item.date ? `<span class="item-date">${item.date}</span>` : ""}
-            ${item.feed ? `<span class="item-tag">${item.feed}</span>` : ""}
-          </a>`;
-        }).join("")}
-      </div>
-    </div>`;
-  });
+  if (catId === "provinces") {
+    // 分组显示：中央机构 → 省 → 自治区 → 直辖市 → 特别行政区
+    const regionOrder = ["central", "province", "autonomous", "municipality", "sar"];
+    const regionLabels = { central: "中央机构", province: "省", autonomous: "自治区", municipality: "直辖市", sar: "特别行政区" };
+    regionOrder.forEach(region => {
+      const group = filtered.filter(s => s.region === region);
+      if (group.length === 0) return;
+      html += `<div class="section-header">${regionLabels[region]}</div>`;
+      group.forEach(s => {
+        const starred = starredSources.has(s.name);
+        const starChar = starred ? "★" : "☆";
+        const starClass = starred ? " starred" : "";
+        html += cardHtml(s, starred, starChar, starClass);
+      });
+    });
+  } else {
+    filtered.forEach((s, i) => {
+      const starred = starredSources.has(s.name);
+      const starChar = starred ? "★" : "☆";
+      const starClass = starred ? " starred" : "";
+      html += cardHtml(s, starred, starChar, starClass);
+    });
+  }
   grid.innerHTML = html;
   setupDragDrop();
 }
@@ -755,8 +793,11 @@ async function loadFeed() {
           feed: i.feed || "",
         })),
       };
-      if (idx >= 0) sources[idx] = entry;
-      else sources.push(entry);
+      if (idx >= 0) {
+        // 保留硬编码中的 region 字段
+        if (sources[idx].region) entry.region = sources[idx].region;
+        sources[idx] = entry;
+      } else sources.push(entry);
     }
     // 删除已不再抓取的信源（仅在 feed.json 有覆盖时）
     // 保留未在 feed 中的硬编码信源
